@@ -1,5 +1,5 @@
 # Compound Eyes
-This is a TCP server which listens on port 8000 and accept connections from [clients](https://github.com/eternal-echo/Ommatidia_client).
+This is a TCP server which listens on port 8000 and accept connections from [clients](https://github.com/eternal-echo/Ommatidia_client).  
 
 ## cmd
 ### preview
