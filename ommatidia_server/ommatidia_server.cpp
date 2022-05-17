@@ -101,15 +101,15 @@ int Ommatidia_server::thread_preview()
         std::unique_lock<std::mutex> lk(camera_mutex_);
         camera_cond_.wait(lk, [this]{return is_preview_;});
         lk.unlock();
-        v_buf_.clear();
+        v_buffer_.clear();
         while(is_preview_)
         {
-            ret = server_.recv(client_fd_, v_buf_);
+            ret = server_.recv(client_fd_, v_buffer_);
             if(ret < 0) {
                 std::cout<< "Failed to recv data" << std::endl;
                 continue;
             }
-            JPEG_data jpeg(v_buf_);
+            JPEG_data jpeg(v_buffer_);
             ret = jpeg.find_data(jpeg_data);
             if(ret < 0) {
                 std::cout<< "Failed to find data" << std::endl;
@@ -143,18 +143,33 @@ int Ommatidia_server::capture()
     std::cout << "Ommatidia capture" << std::endl;
     int ret;
     char acks[2];
+    std::vector<unsigned char> chunk;
     do {
         for(int i=0; i<cameras_num_; i++) {
-            v_buf_.clear();
+            v_buffer_.clear();
             acks[1] = i;
             try {
                 std::cout << "try to recv data, camera index:" << i << std::endl;
-                ret = server_.recv(client_fd_, v_buf_);
+                size_t buffer_size = 0;
+                ret = server_.recv(client_fd_, &buffer_size, sizeof(size_t));
+                if(ret < 0) {
+                    throw "Failed to recv buffer size";
+                }
+                std::cout << "The expected receive buffer size: " << buffer_size << std::endl;
+                do {
+                    chunk.clear();
+                    ret = server_.recv(client_fd_, chunk);
+                    if(ret < 0) {
+                        break;
+                    }
+                    v_buffer_.insert(v_buffer_.end(), chunk.begin(), chunk.end());
+                }while(v_buffer_.size() < buffer_size);
                 if(ret < 0) {
                     throw "Failed to recv data";
                 }
+                std::cout << "The actual receive buffer size: " << v_buffer_.size() << std::endl;
                 std::cout << "check JPEG data" << std::endl;
-                JPEG_data jpeg(v_buf_);
+                JPEG_data jpeg(v_buffer_);
                 if(!jpeg.is_valid()) {
                     ret = -1;
                     throw "Failed to find data";
@@ -165,7 +180,7 @@ int Ommatidia_server::capture()
                 server_.clear_recv_buffer(client_fd_);
                 server_.send(client_fd_, acks, 2); // jpeg data is valid
                 std::cout << "save data" << std::endl;
-                cv::Mat img = cv::imdecode(v_buf_, CV_LOAD_IMAGE_COLOR);
+                cv::Mat img = cv::imdecode(v_buffer_, CV_LOAD_IMAGE_COLOR);
                 cv::imwrite("photo/photo" + std::to_string(id_) + "-" + std::to_string(i) + ".jpg", img);
             } catch(const char *e) {
                 std::cout<< "Failed to recv data, in capture mode:" << std::endl;

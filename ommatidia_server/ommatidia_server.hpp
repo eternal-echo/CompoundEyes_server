@@ -34,7 +34,7 @@ private:
     int cameras_num_;
     int id_;
     bool is_preview_ = false;
-    std::vector<unsigned char> v_buf_ = {};
+    std::vector<unsigned char> v_buffer_ = {};
     std::mutex camera_mutex_;
     std::condition_variable camera_cond_;
     std::thread preview_thread_;

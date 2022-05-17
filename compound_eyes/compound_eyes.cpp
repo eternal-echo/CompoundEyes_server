@@ -13,7 +13,7 @@ CompoundEyes::~CompoundEyes()
 int CompoundEyes::init()
 {
     int ret;
-    ret = server_.init("127.0.0.1", 8000, 5);
+    ret = server_.init("192.168.43.169", 8000, 5);
     if(ret < 0) {
         std::cout<< "Failed to init server" << std::endl;
         return -1;

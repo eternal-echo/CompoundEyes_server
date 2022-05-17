@@ -33,6 +33,11 @@ public:
     int send(int client_fd, const std::string &buf);
     size_t recv(int client_fd, unsigned char *buf, size_t len);
     size_t recv(int client_fd, char *buf, size_t len);
+    template <typename P>
+    size_t recv(int client_fd, P buf, size_t len)
+    {
+        return recv(client_fd, (unsigned char *)buf, len);
+    }
     size_t recv(int client_fd, std::string &buf);
     size_t recv(int client_fd, std::vector<unsigned char> &buf);
     int close(int client_fd);
@@ -44,7 +49,7 @@ private:
     int port_;
     int backlog_;
     unsigned char *buf_ = nullptr;
-    size_t buf_size_ = 200000;
+    size_t buf_size_ = 120000;
 };
 
 #endif // __TCP_SERVER_HPP__
